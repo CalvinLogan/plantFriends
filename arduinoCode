@@ -1,15 +1,15 @@
-#include "music.h";
+#include "music.h"; //reference sketch with notes and melodies of buzzer songs
 
 int photocellPin1 = A0;
 int photocell1; //on A0
 int photocellPin2 = A2;
 int photocell2;
 int touchSensorPin1 = 9;
-int touchSensor1; //on 9 (digital)
+int touchSensor1; 
 int touchSensorPin2 = 8;
-int touchSensor2; //on 9 (digital)
+int touchSensor2;
 int LEDPin1 = 11;
-int LEDPin2 = 6; //music pin???
+int LEDPin2 = 6; 
 int LEDPin3 = 5;
 int LEDPin4 = 12;
 int buzzerPin = 10;
@@ -17,6 +17,7 @@ int buzzerPin = 10;
 void setup() {
   Serial.begin(9600);
 
+  //defining inputs and outputs
   pinMode(photocellPin1, INPUT); //photocell
   pinMode(photocellPin2, INPUT); //photocell
   pinMode(touchSensorPin1, INPUT); //touchSensor
@@ -26,11 +27,10 @@ void setup() {
   pinMode(LEDPin4, OUTPUT); //LEDs
   pinMode(LEDPin4, OUTPUT); //LEDs
   pinMode(buzzerPin, OUTPUT); //buzzer
-  
-//  attachInterrupt(digitalPinToInterrupt(touchSensorPin1),pause,FALLING);
 }
 
 void loop() {
+
   //read inputs
   photocell1 = analogRead(photocellPin1); //range: 14-660
   photocell2 = analogRead(photocellPin2); //range: 14-660
@@ -59,25 +59,21 @@ void loop() {
     digitalWrite(LEDPin4, LOW);   
   }
 
+  //play Mario if touched
   //Touch sensor & Buzzer
   if(touchSensor1 == 1){
     Mario();
   }
 
-  //Touch sensor & Buzzer
+  //play Mii if touched
   if(touchSensor2 == 1){
     Mii();
   }
 
-
 }//end loop
 
-////interupt function to pause the buzzer when the buzzSensor reading is LOW
-//void pause() {
-//  Serial.println("INTERRPUT");
-//  noTone(buzzerPin);
-//}
 
+//song function to play Super Mario Bros game over theme
 void Mario() {
    
   // iterate over the notes of the melody. 
@@ -106,6 +102,8 @@ void Mario() {
    }
 }
 
+
+//song function to play Mii Channel Theme
 void Mii() {
    
   // iterate over the notes of the melody. 
