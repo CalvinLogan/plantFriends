@@ -1,3 +1,6 @@
+//Melodies and code for music by Robson Couto
+//More songs available at https://github.com/robsoncouto/arduino-songs                                            
+                                                                                 
 //notes 
 #define NOTE_B0  31
 #define NOTE_C1  33
@@ -96,7 +99,7 @@
 // !!negative numbers are used to represent dotted notes,
 // so -4 means a dotted quarter note, that is, a quarter plus an eighteenth!!
 
-//Greensleeves Melody by Alexabder Trompoukis
+//SuperMario Bros Game Over Theme
 int melodyA[] = {
   
   //game over sound
@@ -106,6 +109,7 @@ int melodyA[] = {
 
 };
 
+//Mii Chanel Theme
 int melodyB[] = { 
   NOTE_FS4,8, REST,8, NOTE_A4,8, NOTE_CS5,8, REST,8,NOTE_A4,8, REST,8, NOTE_FS4,8, //1
   NOTE_D4,8, NOTE_D4,8, NOTE_D4,8, REST,8, REST,4, REST,8, NOTE_CS4,8,
