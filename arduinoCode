@@ -1,246 +1,135 @@
+#include "music.h";
 
-/* 
-  Code for Greensleeves written by Robson Couto, 2019
-  More songs available at https://github.com/robsoncouto/arduino-songs. 
-  
-  Code for photocell control of the LED taken from Adafruit
-  https://learn.adafruit.com/photocells/arduino-code
-*/
-
-/*Connect one end of the photocell to 5V, the other end to Analog 0.
-Then connect one end of a 10K resistor from Analog 0 to ground 
-Connect LED from pin 11 through a resistor to ground 
-For more information see http://learn.adafruit.com/photocells */
-
-//notes 
-#define NOTE_B0  31
-#define NOTE_C1  33
-#define NOTE_CS1 35
-#define NOTE_D1  37
-#define NOTE_DS1 39
-#define NOTE_E1  41
-#define NOTE_F1  44
-#define NOTE_FS1 46
-#define NOTE_G1  49
-#define NOTE_GS1 52
-#define NOTE_A1  55
-#define NOTE_AS1 58
-#define NOTE_B1  62
-#define NOTE_C2  65
-#define NOTE_CS2 69
-#define NOTE_D2  73
-#define NOTE_DS2 78
-#define NOTE_E2  82
-#define NOTE_F2  87
-#define NOTE_FS2 93
-#define NOTE_G2  98
-#define NOTE_GS2 104
-#define NOTE_A2  110
-#define NOTE_AS2 117
-#define NOTE_B2  123
-#define NOTE_C3  131
-#define NOTE_CS3 139
-#define NOTE_D3  147
-#define NOTE_DS3 156
-#define NOTE_E3  165
-#define NOTE_F3  175
-#define NOTE_FS3 185
-#define NOTE_G3  196
-#define NOTE_GS3 208
-#define NOTE_A3  220
-#define NOTE_AS3 233
-#define NOTE_B3  247
-#define NOTE_C4  262
-#define NOTE_CS4 277
-#define NOTE_D4  294
-#define NOTE_DS4 311
-#define NOTE_E4  330
-#define NOTE_F4  349
-#define NOTE_FS4 370
-#define NOTE_G4  392
-#define NOTE_GS4 415
-#define NOTE_A4  440
-#define NOTE_AS4 466
-#define NOTE_B4  494
-#define NOTE_C5  523
-#define NOTE_CS5 554
-#define NOTE_D5  587
-#define NOTE_DS5 622
-#define NOTE_E5  659
-#define NOTE_F5  698
-#define NOTE_FS5 740
-#define NOTE_G5  784
-#define NOTE_GS5 831
-#define NOTE_A5  880
-#define NOTE_AS5 932
-#define NOTE_B5  988
-#define NOTE_C6  1047
-#define NOTE_CS6 1109
-#define NOTE_D6  1175
-#define NOTE_DS6 1245
-#define NOTE_E6  1319
-#define NOTE_F6  1397
-#define NOTE_FS6 1480
-#define NOTE_G6  1568
-#define NOTE_GS6 1661
-#define NOTE_A6  1760
-#define NOTE_AS6 1865
-#define NOTE_B6  1976
-#define NOTE_C7  2093
-#define NOTE_CS7 2217
-#define NOTE_D7  2349
-#define NOTE_DS7 2489
-#define NOTE_E7  2637
-#define NOTE_F7  2794
-#define NOTE_FS7 2960
-#define NOTE_G7  3136
-#define NOTE_GS7 3322
-#define NOTE_A7  3520
-#define NOTE_AS7 3729
-#define NOTE_B7  3951
-#define NOTE_C8  4186
-#define NOTE_CS8 4435
-#define NOTE_D8  4699
-#define NOTE_DS8 4978
-#define REST      0
-
-// notes of the moledy followed by the duration.
-// a 4 means a quarter note, 8 an eighteenth , 16 sixteenth, so on
-// !!negative numbers are used to represent dotted notes,
-// so -4 means a dotted quarter note, that is, a quarter plus an eighteenth!!
-
-//Greensleeves Melody by Alexabder Trompoukis
-int melody[] = {
-
-  NOTE_G4,8,//1
-  NOTE_AS4,4, NOTE_C5,8, NOTE_D5,-8, NOTE_DS5,16, NOTE_D5,8,
-  NOTE_C5,4, NOTE_A4,8, NOTE_F4,-8, NOTE_G4,16, NOTE_A4,8,
-  NOTE_AS4,4, NOTE_G4,8, NOTE_G4,-8, NOTE_FS4,16, NOTE_G4,8,
-  NOTE_A4,4, NOTE_FS4,8, NOTE_D4,4, NOTE_G4,8,
-  
-  NOTE_AS4,4, NOTE_C5,8, NOTE_D5,-8, NOTE_DS5,16, NOTE_D5,8,//6
-  NOTE_C5,4, NOTE_A4,8, NOTE_F4,-8, NOTE_G4,16, NOTE_A4,8,
-  NOTE_AS4,-8, NOTE_A4,16, NOTE_G4,8, NOTE_FS4,-8, NOTE_E4,16, NOTE_FS4,8, 
-  NOTE_G4,-2,
-  NOTE_F5,2, NOTE_E5,16, NOTE_D5,8,
-
-  NOTE_C5,4, NOTE_A4,8, NOTE_F4,-8, NOTE_G4,16, NOTE_A4,8,//11
-  NOTE_AS4,4, NOTE_G4,8, NOTE_G4,-8, NOTE_FS4,16, NOTE_G4,8,
-  NOTE_A4,4, NOTE_FS4,8, NOTE_D4,04,
-  NOTE_F5,2, NOTE_E5,16, NOTE_D5,8,
-  NOTE_C5,4, NOTE_A4,8, NOTE_F4,-8, NOTE_G4,16, NOTE_A4,8,
-
-  NOTE_AS4,-8, NOTE_A4,16, NOTE_G4,8, NOTE_FS4,-8, NOTE_E4,16, NOTE_FS4,8,//16
-  NOTE_G4,-2,
-};
-
-//global variables
-int divider = 0, noteDuration = 0;
-int tempo = 70;
-int buzzSensor = 9;
-int buzzer = 10;
-int led = 11;          // connect Red LED to pin 11 (PWM pin)
-int photocell = A0;     // the cell and 10K pulldown are connected to a0
-int photocellReading;     // the analog reading from the sensor divider
-int buzzSensorReading;
-int LEDbrightness;     
-
-
-// sizeof gives the number of bytes, each int value is composed of two bytes (16 bits)
-// there are two values per note (pitch and duration), so for each note there are four bytes
-int notes = sizeof(melody) / sizeof(melody[0]) / 2;
-
-// this calculates the duration of a whole note in ms
-int wholenote = (60000 * 4) / tempo;
-
+int photocellPin1 = A0;
+int photocell1; //on A0
+int photocellPin2 = A2;
+int photocell2;
+int touchSensorPin1 = 9;
+int touchSensor1; //on 9 (digital)
+int touchSensorPin2 = 8;
+int touchSensor2; //on 9 (digital)
+int LEDPin1 = 11;
+int LEDPin2 = 6; //music pin???
+int LEDPin3 = 5;
+int LEDPin4 = 12;
+int buzzerPin = 10;
 
 void setup() {
-  // We'll send debugging information via the Serial monitor
-  Serial.begin(9600);   
+  Serial.begin(9600);
+
+  pinMode(photocellPin1, INPUT); //photocell
+  pinMode(photocellPin2, INPUT); //photocell
+  pinMode(touchSensorPin1, INPUT); //touchSensor
+  pinMode(touchSensorPin2, INPUT); //touchSensor
+  pinMode(LEDPin1, OUTPUT); //LEDs
+  pinMode(LEDPin2, OUTPUT); //LEDs
+  pinMode(LEDPin4, OUTPUT); //LEDs
+  pinMode(LEDPin4, OUTPUT); //LEDs
+  pinMode(buzzerPin, OUTPUT); //buzzer
   
-  //designates inputs and outputs
-  pinMode(photocell, INPUT);
-  pinMode(led,OUTPUT);
-  pinMode(buzzSensor, INPUT);
-  pinMode(buzzer, OUTPUT);
-  attachInterrupt(digitalPinToInterrupt(9),pause,LOW);
+//  attachInterrupt(digitalPinToInterrupt(touchSensorPin1),pause,FALLING);
 }
- 
+
 void loop() {
+  //read inputs
+  photocell1 = analogRead(photocellPin1); //range: 14-660
+  photocell2 = analogRead(photocellPin2); //range: 14-660
+  touchSensor1 = digitalRead(touchSensorPin1);
+  touchSensor2 = digitalRead(touchSensorPin2);
 
-  // inverting the photocell reading so that the LED gets brighter as the photocell light decreases
-  photocellReading = analogRead(photocell);
-  
-  Serial.print("photocell!");
-  
-  LEDbrightness = map(photocellReading, 100, 750, 0, 255);
+  //LED output
+  int LEDbrightness1 = map(photocell1, 500, 15, 0, 255);
+  int LEDbrightness2 = map(photocell2, 500, 15, 0, 255);
 
-   //controls the LED through the photocell
-  if (photocellReading < 500) {
-    analogWrite(led,LEDbrightness);
-  } else {
-    digitalWrite(led,LOW);
+  //turn LED off if bright
+  if(photocell1 < 500){
+    analogWrite(LEDPin1,LEDbrightness1);
+    analogWrite(LEDPin2,LEDbrightness1);
+  } else{
+    digitalWrite(LEDPin1, LOW);
+    digitalWrite(LEDPin2, LOW); 
   }
-  
-  Serial.print("light!");
-  
-  
-  
-  //variables to gather the analog and digital readings from the sensors
-  int buzzSensorReading = digitalRead(buzzSensor);
 
-  //controls the buzzer through the capacitive touch sensor
-  if (buzzSensorReading == LOW){
-    if (buzzer == HIGH){
-      digitalWrite(buzzer,LOW);
-    }
-  } else {
-    if (buzzer == HIGH){
-      //delay(100);
-    } else {
-    Greensleeves();
-    }
+   //turn LED off if bright
+  if(photocell2 < 500){
+    analogWrite(LEDPin3,LEDbrightness2);
+    analogWrite(LEDPin4,LEDbrightness2);
+  } else{
+    digitalWrite(LEDPin3, LOW);
+    digitalWrite(LEDPin4, LOW);   
   }
-  
-  Serial.print("song!");
-  
-  //a negligable delay to make the serial reading more accurate
-  delay(100);
-} 
 
-//interupt function to pause the buzzer when the buzzSensor reading is LOW
-void pause() {
-  digitalWrite(buzzer,LOW);
-  //noTone(buzzer);
-}
+  //Touch sensor & Buzzer
+  if(touchSensor1 == 1){
+    Mario();
+  }
 
-//function to play the song Greensleeves through the buzzer
-void Greensleeves() {
-  
-  
-  
+  //Touch sensor & Buzzer
+  if(touchSensor2 == 1){
+    Mii();
+  }
+
+
+}//end loop
+
+////interupt function to pause the buzzer when the buzzSensor reading is LOW
+//void pause() {
+//  Serial.println("INTERRPUT");
+//  noTone(buzzerPin);
+//}
+
+void Mario() {
+   
   // iterate over the notes of the melody. 
   // Remember, the array is twice the number of notes (notes + durations)
-  for (int thisNote = 0; thisNote < notes * 2; thisNote = thisNote + 2) {
+  for (int thisNote = 0; thisNote < notesA * 2; thisNote = thisNote + 2) {
     // calculates the duration of each note
-    divider = melody[thisNote + 1];
+    divider = melodyA[thisNote + 1];
     if (divider > 0) {
       // regular note, just proceed
-      noteDuration = (wholenote) / divider;
+      noteDuration = (wholenoteA) / divider;
     } else if (divider < 0) {
       // dotted notes are represented with negative durations!!
-      noteDuration = (wholenote) / abs(divider);
+      noteDuration = (wholenoteA) / abs(divider);
       noteDuration *= 1.5; // increases the duration in half for dotted notes
     }
 
     // we only play the note for 90% of the duration, leaving 10% as a pause
-    tone(buzzer, melody[thisNote], noteDuration*0.9);
+    tone(buzzerPin, melodyA[thisNote], noteDuration*0.9);
 
     // Wait for the specific duration before playing the next note.
     delay(noteDuration);
     
     // stop the waveform generation before the next note.
-    noTone(buzzer);
+    noTone(buzzerPin);
      
    }
-} 
+}
+
+void Mii() {
+   
+  // iterate over the notes of the melody. 
+  // Remember, the array is twice the number of notes (notes + durations)
+  for (int thisNote = 0; thisNote < notesB * 2; thisNote = thisNote + 2) {
+    // calculates the duration of each note
+    divider = melodyB[thisNote + 1];
+    if (divider > 0) {
+      // regular note, just proceed
+      noteDuration = (wholenoteB) / divider;
+    } else if (divider < 0) {
+      // dotted notes are represented with negative durations!!
+      noteDuration = (wholenoteB) / abs(divider);
+      noteDuration *= 1.5; // increases the duration in half for dotted notes
+    }
+
+    // we only play the note for 90% of the duration, leaving 10% as a pause
+    tone(buzzerPin, melodyB[thisNote], noteDuration*0.9);
+
+    // Wait for the specific duration before playing the next note.
+    delay(noteDuration);
+    
+    // stop the waveform generation before the next note.
+    noTone(buzzerPin);
+     
+   }
+}
